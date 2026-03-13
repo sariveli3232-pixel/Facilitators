@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Özel Zar Uygulaması</title>
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --text-color: #202124;
+            --primary-color: #1a73e8;
+            --primary-hover: #1557b0;
+            --die-bg: #ffffff;
+            --die-border: #dadce0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Toplam Puan Alanı */
+        .header {
+            text-align: center;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        .total-score {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 0;
+            line-height: 1;
+        }
+
+        .total-label {
+            font-size: 0.9rem;
+            color: #5f6368;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Zar Masası (Zarların düştüğü yer) */
+        .board {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            justify-content: center;
+            gap: 15px;
+            overflow-y: auto;
+        }
+
+        /* Aktif Zar Tasarımı */
+        .die {
+            width: 70px;
+            height: 70px;
+            background-color: var(--die-bg);
+            border: 2px solid var(--die-border);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.1s;
+            position: relative;
+        }
+
+        .die:active {
+            transform: scale(0.95);
+        }
+
+        .die-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .die-type {
+            font-size: 0.7rem;
+            color: #5f6368;
+            position: absolute;
+            bottom: 4px;
+        }
+
+        /* Zar Atma Animasyonu */
+        @keyframes roll-anim {
+            0% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(-15deg) scale(1.1); }
+            50% { transform: rotate(15deg) scale(0.9); }
+            75% { transform: rotate(-10deg) scale(1.05); }
+            100% { transform: rotate(0deg) scale(1); }
+        }
+
+        .rolling {
+            animation: roll-anim 0.4s ease-in-out;
+        }
+
+        /* Alt Kontroller ve Zar Seçici */
+        .controls-container {
+            background-color: white;
+            padding: 15px;
+            border-top: 1px solid var(--die-border);
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-roll {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-roll:active { background-color: var(--primary-hover); }
+
+        .btn-clear {
+            background-color: #f1f3f4;
+            color: #3c4043;
+        }
+
+        .btn-clear:active { background-color: #e8eaed; }
+
+        .dice-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+            gap: 8px;
+        }
+
+        .add-die-btn {
+            background-color: #e8f0fe;
+            color: var(--primary-color);
+            border: 1px solid transparent;
+            border-radius: 8px;
+            padding: 10px 5px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .add-die-btn:active {
+            background-color: #d2e3fc;
+        }
+
+        /* Tıklayarak silme ipucu */
+        .tooltip {
+            text-align: center;
+            font-size: 0.8rem;
+            color: #80868b;
+            margin-bottom: 10px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="total-label">Total</div>
+        <div class="total-score" id="totalScore">0</div>
+    </div>
+
+    <div class="board" id="board">
+        </div>
+
+    <div class="controls-container">
+        <div class="tooltip">Click on the die on the table to erase it.</div>
+        
+        <div class="action-buttons">
+            <button class="btn btn-clear" onclick="clearBoard()">Clean</button>
+            <button class="btn btn-roll" onclick="rollAll()">Roll the Dice</button>
+        </div>
+
+        <div class="dice-selector">
+            <button class="add-die-btn" onclick="addDie(4)">d4</button>
+            <button class="add-die-btn" onclick="addDie(6)">d6</button>
+            <button class="add-die-btn" onclick="addDie(8)">d8</button>
+            <button class="add-die-btn" onclick="addDie(10)">d10</button>
+            <button class="add-die-btn" onclick="addDie(12)">d12</button>
+            <button class="add-die-btn" onclick="addDie(16)">d16</button>
+            <button class="add-die-btn" onclick="addDie(20)">d20</button>
+            <button class="add-die-btn" onclick="addDie(24)">d24</button>
+            <button class="add-die-btn" onclick="addDie(32)">d32</button>
+        </div>
+    </div>
+
+    <script>
+        let activeDice = [];
+        let dieIdCounter = 0;
+
+        // Rastgele sayı üretici (1 ile max arası)
+        function getRandomValue(max) {
+            return Math.floor(Math.random() * max) + 1;
+        }
+
+        // Masaya yeni zar ekleme
+        function addDie(sides) {
+            const die = {
+                id: dieIdCounter++,
+                sides: sides,
+                value: getRandomValue(sides)
+            };
+            activeDice.push(die);
+            renderBoard(true, die.id);
+        }
+
+        // Zarı masadan silme
+        function removeDie(id) {
+            activeDice = activeDice.filter(die => die.id !== id);
+            renderBoard(false);
+        }
+
+        // Masadaki tüm zarları yeniden atma
+        function rollAll() {
+            if (activeDice.length === 0) return;
+            
+            activeDice.forEach(die => {
+                die.value = getRandomValue(die.sides);
+            });
+            renderBoard(true);
+        }
+
+        // Masayı tamamen temizleme
+        function clearBoard() {
+            activeDice = [];
+            renderBoard(false);
+        }
+
+        // Ekranı güncelleme ve toplamı hesaplama
+        function renderBoard(animate = false, specificId = null) {
+            const board = document.getElementById('board');
+            const totalScoreEl = document.getElementById('totalScore');
+            
+            board.innerHTML = ''; // Tahtayı temizle
+            let total = 0;
+
+            activeDice.forEach(die => {
+                total += die.value;
+
+                // Zar elementi oluşturma
+                const dieEl = document.createElement('div');
+                dieEl.className = 'die';
+                
+                // Animasyon kontrolü (Yeni eklenene veya hepsine)
+                if (animate && (specificId === null || specificId === die.id)) {
+                    dieEl.classList.add('rolling');
+                    // Animasyon bitince sınıfı kaldır ki tekrar atıldığında çalışsın
+                    setTimeout(() => dieEl.classList.remove('rolling'), 400);
+                }
+
+                dieEl.onclick = () => removeDie(die.id);
+
+                const valueEl = document.createElement('div');
+                valueEl.className = 'die-value';
+                valueEl.textContent = die.value;
+
+                const typeEl = document.createElement('div');
+                typeEl.className = 'die-type';
+                typeEl.textContent = 'd' + die.sides;
+
+                dieEl.appendChild(valueEl);
+                dieEl.appendChild(typeEl);
+                board.appendChild(dieEl);
+            });
+
+            // Toplam skoru güncelleme
+            totalScoreEl.textContent = total;
+        }
+    </script>
+</body>
+</html>
