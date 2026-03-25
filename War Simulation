@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ülke ve Savaş Simülatörü</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1e1e24; color: #f5f5f5; margin: 0; padding: 20px; }
+        h1, h2, h3 { color: #ffbc42; }
+        .container { display: flex; flex-wrap: wrap; gap: 20px; }
+        .panel { background-color: #2b2b36; padding: 20px; border-radius: 8px; flex: 1; min-width: 300px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        
+        input[type="text"], input[type="number"], select { width: 100%; padding: 8px; margin: 5px 0 15px 0; border-radius: 4px; border: none; box-sizing: border-box; }
+        input[type="number"] { width: 80px; display: inline-block; margin: 0 10px 0 5px; }
+        
+        button { background-color: #d81159; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; transition: background 0.3s; }
+        button:hover { background-color: #8f2d56; }
+        
+        .list-item { background-color: #4a4e69; margin: 5px 0; padding: 10px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: background 0.2s; }
+        .list-item:hover { background-color: #22223b; }
+        .list-item-content { display: flex; align-items: center; flex: 1; }
+        .flag-img { width: 30px; height: 20px; object-fit: cover; border-radius: 2px; margin-right: 10px; }
+        
+        .delete-btn { width: auto; padding: 5px 10px; background-color: #ff3366; font-size: 12px; margin-left: 10px; }
+        .delete-btn:hover { background-color: #cc0033; }
+        .kick-btn { background-color: #ff9900; }
+        .kick-btn:hover { background-color: #cc7a00; }
+        
+        /* Modal (Genel) */
+        .modal { display: none; position: fixed; z-index: 10; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); }
+        .modal-content { background-color: #2b2b36; margin: 10% auto; padding: 20px; border-radius: 8px; width: 80%; max-width: 450px; max-height: 70vh; overflow-y: auto; }
+        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .close:hover { color: white; }
+        
+        .stat-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: #3a3a48; padding: 10px; border-radius: 4px; }
+        .stat-controls { display: flex; align-items: center; gap: 10px; }
+        .stat-btn { width: 30px; height: 30px; padding: 0; font-size: 18px; background-color: #218380; }
+        .stat-btn:hover { background-color: #73d2de; }
+        .stat-input { width: 60px !important; text-align: center; margin: 0 !important; background: #1e1e24; color: white; border: 1px solid #4a4e69; border-radius: 4px; font-weight: bold; font-size: 16px; padding: 4px !important; }
+        
+        /* Checkbox listesi */
+        .checkbox-group { max-height: 150px; overflow-y: auto; background: #1e1e24; padding: 10px; border-radius: 4px; margin-bottom: 15px; }
+        .checkbox-group label { display: block; margin-bottom: 5px; cursor: pointer; }
+        
+        /* Savaş Logları */
+        #battle-log { background: #1e1e24; padding: 10px; border-radius: 4px; height: 200px; overflow-y: auto; list-style-type: none; margin: 0; font-family: monospace; }
+        #battle-log li { margin-bottom: 8px; border-bottom: 1px solid #333; padding-bottom: 4px; }
+        .text-success { color: #73d2de; }
+        .text-warning { color: #ffbc42; }
+
+        .settings-box { background: #3a3a48; padding: 10px; border-radius: 4px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-around; flex-wrap: wrap; gap: 10px;}
+        .prob-details { font-size: 12px; color: #aaa; }
+    </style>
+</head>
+<body>
+
+    <h1>🌎 Global Güç Simülatörü</h1>
+
+    <div class="container">
+        <div class="panel">
+            <h2>Ülke Oluştur</h2>
+            <label>Ülke Adı (Zorunlu):</label>
+            <input type="text" id="country-name" placeholder="Örn: Türkiye">
+            
+            <label>Bayrak URL (İsteğe Bağlı):</label>
+            <input type="text" id="country-flag" placeholder="Resim linki yapıştırın...">
+            
+            <button onclick="createCountry()">Ülkeyi Kur</button>
+            
+            <h3 style="margin-top: 20px;">Ülkeler (Detay için tıkla)</h3>
+            <div id="countries-list"></div>
+        </div>
+
+        <div class="panel">
+            <h2>İttifak Kur</h2>
+            <label>İttifak Adı:</label>
+            <input type="text" id="alliance-name" placeholder="Örn: NATO">
+            
+            <label>Üyeleri Seç:</label>
+            <div class="checkbox-group" id="alliance-members">
+                <em style="color:#aaa;">Önce ülke oluşturmalısınız.</em>
+            </div>
+            
+            <button onclick="createAlliance()" style="background-color: #218380;">İttifakı Kur</button>
+            
+            <h3 style="margin-top: 20px;">İttifaklar (Detay için tıkla)</h3>
+            <div id="alliances-list"></div>
+        </div>
+
+        <div class="panel" style="flex: 2; min-width: 100%;">
+            <h2>⚔️ Savaş Meydanı</h2>
+            
+            <div class="settings-box">
+                <div style="width: 100%; text-align: center; color: #ffbc42; margin-bottom: 5px;"><strong>Temel Ayarlar</strong></div>
+                <div>
+                    <label>Kazanılacak Min Toprak:</label>
+                    <input type="number" id="min-terr" value="1" min="0">
+                </div>
+                <div>
+                    <label>Kazanılacak Max Toprak:</label>
+                    <input type="number" id="max-terr" value="4" min="1">
+                </div>
+            </div>
+
+            <div class="settings-box">
+                <div style="width: 100%; text-align: center; color: #ffbc42; margin-bottom: 5px;"><strong>Savaş Puanı (BP) & Mekanik Ayarları</strong></div>
+                <div><label>Saldırı Tetikleme Puanı:</label><input type="number" id="saldiri-threshold" value="3" min="1"></div>
+                <div><label>Savunma Tetikleme Puanı:</label><input type="number" id="savunma-threshold" value="5" min="1"></div>
+                <div><label>Yıpratma Tetikleme Puanı:</label><input type="number" id="yipratma-threshold" value="2" min="1"></div>
+                <div><label>Kazanılan İstatistik (Buff):</label><input type="number" id="stat-gain-amount" value="2" min="1"></div>
+                <div><label>Kaybedilen İstatistik (Hasar):</label><input type="number" id="stat-loss-amount" value="1" min="1"></div>
+            </div>
+
+            <div class="container" style="gap:10px;">
+                <div style="flex: 1;">
+                    <h3>1. Taraf</h3>
+                    <select id="side1-select" onchange="calculateProbability()"></select>
+                    <select id="side1-stance" onchange="calculateProbability()">
+                        <option value="saldiri">Saldırı Modu ⚔️</option>
+                        <option value="savunma">Savunma Modu 🛡️</option>
+                        <option value="yipratma">Yıpratma Modu ☠️</option>
+                    </select>
+                </div>
+                <div style="display:flex; align-items:center; flex-direction:column; justify-content: center; font-size:24px; font-weight:bold; flex: 1.5;">
+                    VS
+                    <div id="probability-display" style="font-size: 15px; margin-top: 10px; text-align: center; color: #fff; background: #1e1e24; padding: 10px; border-radius: 4px; width: 100%;">
+                        Savaş İhtimali: Lütfen tarafları seçin.
+                    </div>
+                </div>
+                <div style="flex: 1;">
+                    <h3>2. Taraf</h3>
+                    <select id="side2-select" onchange="calculateProbability()"></select>
+                    <select id="side2-stance" onchange="calculateProbability()">
+                        <option value="saldiri">Saldırı Modu ⚔️</option>
+                        <option value="savunma">Savunma Modu 🛡️</option>
+                        <option value="yipratma">Yıpratma Modu ☠️</option>
+                    </select>
+                </div>
+            </div>
+            <button onclick="playTurn()" style="margin-top: 15px; font-size: 18px; padding: 15px;">Savaş Turunu Oynat</button>
+            <button onclick="resetBattlePoints()" style="margin-top: 10px; background-color: #ff9900; font-size: 14px; padding: 10px;">Takımların Savaş Puanlarını Sıfırla</button>
+            
+            <h3 style="margin-top:20px;">Savaş Kayıtları</h3>
+            <ul id="battle-log"></ul>
+        </div>
+    </div>
+
+    <div id="country-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="modal-title">Ülke Detayları</h2>
+            <p><strong>Toprak Büyüklüğü:</strong> <span id="modal-territory"></span></p>
+            <p><strong>Savaş Puanı (BP):</strong> <span id="modal-bp"></span></p>
+            <hr style="border-color: #4a4e69;">
+            <div id="stats-container"></div>
+        </div>
+    </div>
+
+    <div id="alliance-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAllianceModal()">&times;</span>
+            <h2 id="alliance-modal-title">İttifak Detayları</h2>
+            <p style="margin-top: 0;"><strong>Savaş Puanı (BP):</strong> <span id="alliance-modal-bp"></span></p>
+            <hr style="border-color: #4a4e69;">
+            <div id="alliance-members-container" style="max-height: 35vh; overflow-y: auto;"></div>
+            <hr style="border-color: #4a4e69;">
+            <h3>Yeni Üye Ekle</h3>
+            <div style="display: flex; gap: 10px;">
+                <select id="new-alliance-member" style="margin-bottom: 0;"></select>
+                <button onclick="addMemberToActiveAlliance()" style="width: auto; background-color: #218380;">Ekle</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // Veri Yapıları
+    let countries = {};
+    let alliances = {};
+    let countryCounter = 1;
+    let allianceCounter = 1;
+    let activeCountryId = null;
+    let activeAllianceId = null;
+
+    const statNames = {
+        kara: "Kara",
+        deniz: "Deniz",
+        hava: "Hava",
+        fuze: "Uzay",
+        uzay: "Sanal",
+        sanal: "Büyü"
+    };
+
+    // --- 0. VERİ KAYIT (LOCAL STORAGE) VE GÜNCELLEME ---
+    
+    function saveData() {
+        const data = {
+            countries: countries,
+            alliances: alliances,
+            countryCounter: countryCounter,
+            allianceCounter: allianceCounter
+        };
+        localStorage.setItem('warSimData', JSON.stringify(data));
+    }
+
+    function loadData() {
+        const saved = localStorage.getItem('warSimData');
+        if (saved) {
+            const data = JSON.parse(saved);
+            countries = data.countries || {};
+            alliances = data.alliances || {};
+            countryCounter = data.countryCounter || 1;
+            allianceCounter = data.allianceCounter || 1;
+        }
+
+        // Eski kayıtlarda yeni istatistikler ve BP yoksa onar
+        for (let id in countries) {
+            if (countries[id].stats.fuze === undefined) countries[id].stats.fuze = 0;
+            if (countries[id].battlePoints === undefined) countries[id].battlePoints = 0;
+        }
+        for (let id in alliances) {
+            if (alliances[id].battlePoints === undefined) alliances[id].battlePoints = 0;
+        }
+
+        updateUI();
+    }
+
+    // Sayfa yüklendiğinde verileri çek
+    window.onload = loadData;
+
+    // --- 1. ÜLKE VE İTTİFAK OLUŞTURMA & SİLME ---
+
+    function createCountry() {
+        const nameInput = document.getElementById('country-name').value.trim();
+        const flagInput = document.getElementById('country-flag').value.trim();
+
+        if (!nameInput) {
+            alert("Ülke adı zorunludur!");
+            return;
+        }
+
+        const id = 'c_' + countryCounter++;
+        countries[id] = {
+            id: id,
+            name: nameInput,
+            flag: flagInput || 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Flag_of_the_United_Nations.svg/320px-Flag_of_the_United_Nations.svg.png',
+            stats: { kara: 0, deniz: 0, hava: 0, fuze: 0, uzay: 0, sanal: 0 },
+            territory: 100,
+            battlePoints: 0
+        };
+
+        document.getElementById('country-name').value = '';
+        document.getElementById('country-flag').value = '';
+        updateUI();
+        saveData();
+    }
+
+    function deleteCountry(id, event) {
+        event.stopPropagation();
+        if(confirm("Bu ülkeyi kalıcı olarak silmek istediğinize emin misiniz?")) {
+            delete countries[id];
+            for(let aId in alliances) {
+                alliances[aId].members = alliances[aId].members.filter(memberId => memberId !== id);
+            }
+            updateUI();
+            saveData();
+        }
+    }
+
+    function createAlliance() {
+        const nameInput = document.getElementById('alliance-name').value.trim();
+        const checkboxes = document.querySelectorAll('.alliance-cb:checked');
+        
+        if (!nameInput) { alert("İttifak adı zorunludur!"); return; }
+        if (checkboxes.length < 2) { alert("Bir ittifak kurmak için en az 2 ülke seçmelisiniz!"); return; }
+
+        const members = Array.from(checkboxes).map(cb => cb.value);
+        const id = 'a_' + allianceCounter++;
+        
+        alliances[id] = { id: id, name: nameInput, members: members, battlePoints: 0 };
+        document.getElementById('alliance-name').value = '';
+        updateUI();
+        saveData();
+    }
+
+    function deleteAlliance(id, event) {
+        event.stopPropagation();
+        if(confirm("Bu ittifakı dağıtmak istediğinize emin misiniz?")) {
+            delete alliances[id];
+            updateUI();
+            saveData();
+        }
+    }
+
+    // --- 2. ARAYÜZ GÜNCELLEMELERİ ---
+
+    function updateUI() {
+        const cList = document.getElementById('countries-list');
+        cList.innerHTML = '';
+        let cbHTML = '';
+        
+        for (let id in countries) {
+            let c = countries[id];
+            cList.innerHTML += `
+                <div class="list-item" onclick="openModal('${id}')">
+                    <div class="list-item-content">
+                        <img src="${c.flag}" class="flag-img" onerror="this.src='https://via.placeholder.com/30x20/4a4e69/fff?text=?'">
+                        ${c.name}
+                    </div>
+                    <span>Güç: ${getTotalPower(id)} | BP: ${c.battlePoints || 0}</span>
+                    <button onclick="deleteCountry('${id}', event)" class="delete-btn">Sil</button>
+                </div>
+            `;
+            cbHTML += `<label><input type="checkbox" class="alliance-cb" value="${id}"> ${c.name}</label>`;
+        }
+        
+        document.getElementById('alliance-members').innerHTML = cbHTML || '<em style="color:#aaa;">Önce ülke oluşturmalısınız.</em>';
+
+        const aList = document.getElementById('alliances-list');
+        aList.innerHTML = '';
+        for (let id in alliances) {
+            let a = alliances[id];
+            aList.innerHTML += `
+                <div class="list-item" style="background-color: #218380;" onclick="openAllianceModal('${id}')">
+                    <div class="list-item-content">🛡️ ${a.name} (${a.members.length} Üye)</div>
+                    <span>Güç: ${getTotalPower(id)} | BP: ${a.battlePoints || 0}</span>
+                    <button onclick="deleteAlliance('${id}', event)" class="delete-btn">Dağıt</button>
+                </div>
+            `;
+        }
+        updateWarSelects();
+    }
+
+    function updateWarSelects() {
+        const s1 = document.getElementById('side1-select');
+        const s2 = document.getElementById('side2-select');
+        let optionsHTML = '<optgroup label="Ülkeler">';
+        for (let id in countries) optionsHTML += `<option value="${id}">${countries[id].name}</option>`;
+        optionsHTML += '</optgroup><optgroup label="İttifaklar">';
+        for (let id in alliances) optionsHTML += `<option value="${id}">${alliances[id].name}</option>`;
+        optionsHTML += '</optgroup>';
+
+        let v1 = s1.value, v2 = s2.value;
+        s1.innerHTML = optionsHTML;
+        s2.innerHTML = optionsHTML;
+        
+        if(v1 && (countries[v1] || alliances[v1])) s1.value = v1;
+        if(v2 && (countries[v2] || alliances[v2])) s2.value = v2;
+        calculateProbability();
+    }
+
+    // --- 3. DETAY EKRANI VE İTTİFAK MODALI (MODALS) ---
+
+    // Ülke Modalı
+    function openModal(id) {
+        activeCountryId = id;
+        const c = countries[id];
+        document.getElementById('modal-title').innerText = c.name + " İstatistikleri";
+        document.getElementById('modal-territory').innerText = c.territory;
+        document.getElementById('modal-bp').innerText = c.battlePoints || 0;
+        
+        const statsDiv = document.getElementById('stats-container');
+        statsDiv.innerHTML = '';
+        
+        for (let key in c.stats) {
+            statsDiv.innerHTML += `
+                <div class="stat-row">
+                    <span>${statNames[key]}</span>
+                    <div class="stat-controls">
+                        <button class="stat-btn" onclick="changeStat('${key}', -1)">-</button>
+                        <input type="number" class="stat-input" value="${c.stats[key]}" min="0" onchange="setStat('${key}', this.value)">
+                        <button class="stat-btn" onclick="changeStat('${key}', 1)">+</button>
+                    </div>
+                </div>
+            `;
+        }
+        document.getElementById('country-modal').style.display = 'block';
+    }
+
+    function closeModal() {
+        document.getElementById('country-modal').style.display = 'none';
+        activeCountryId = null;
+        updateUI();
+    }
+
+    function changeStat(statKey, amount) {
+        let c = countries[activeCountryId];
+        let newVal = c.stats[statKey] + amount;
+        if (newVal >= 0) {
+            c.stats[statKey] = newVal;
+            openModal(activeCountryId);
+            saveData();
+        }
+    }
+
+    function setStat(statKey, val) {
+        let num = parseInt(val);
+        if (isNaN(num) || num < 0) num = 0;
+        countries[activeCountryId].stats[statKey] = num;
+        openModal(activeCountryId);
+        saveData();
+    }
+
+    // İttifak Modalı
+    function openAllianceModal(id) {
+        activeAllianceId = id;
+        const a = alliances[id];
+        document.getElementById('alliance-modal-title').innerText = "🛡️ " + a.name + " Üyeleri";
+        document.getElementById('alliance-modal-bp').innerText = a.battlePoints || 0;
+        renderAllianceMembers();
+        document.getElementById('alliance-modal').style.display = 'block';
+    }
+
+    function closeAllianceModal() {
+        document.getElementById('alliance-modal').style.display = 'none';
+        activeAllianceId = null;
+        updateUI();
+    }
+
+    function renderAllianceMembers() {
+        if(!activeAllianceId || !alliances[activeAllianceId]) return;
+        
+        const container = document.getElementById('alliance-members-container');
+        const select = document.getElementById('new-alliance-member');
+        container.innerHTML = '';
+        select.innerHTML = '<option value="">Ülke Seçin...</option>';
+        
+        const a = alliances[activeAllianceId];
+        
+        // Üyeleri listele
+        a.members.forEach(memberId => {
+            const c = countries[memberId];
+            if(c) {
+                container.innerHTML += `
+                    <div class="list-item" style="background-color: #3a3a48;">
+                        <div class="list-item-content">
+                            <img src="${c.flag}" class="flag-img" onerror="this.src='https://via.placeholder.com/30x20/4a4e69/fff?text=?'">
+                            ${c.name}
+                        </div>
+                        <span style="margin-right: 15px;">Güç: ${getTotalPower(memberId)}</span>
+                        <button onclick="kickMember('${memberId}')" class="delete-btn kick-btn">At</button>
+                    </div>
+                `;
+            }
+        });
+
+        if(a.members.length === 0) {
+            container.innerHTML = '<p style="color:#aaa; text-align:center;">Bu ittifakta hiç üye kalmadı.</p>';
+        }
+
+        // Eklenebilir ülkeleri seçime koy (zaten üye olmayanlar)
+        for (let cId in countries) {
+            if (!a.members.includes(cId)) {
+                select.innerHTML += `<option value="${cId}">${countries[cId].name}</option>`;
+            }
+        }
+    }
+
+    function kickMember(memberId) {
+        const a = alliances[activeAllianceId];
+        a.members = a.members.filter(id => id !== memberId);
+        renderAllianceMembers();
+        updateUI();
+        saveData();
+    }
+
+    function addMemberToActiveAlliance() {
+        const select = document.getElementById('new-alliance-member');
+        const memberId = select.value;
+        if(!memberId) return;
+
+        alliances[activeAllianceId].members.push(memberId);
+        renderAllianceMembers();
+        updateUI();
+        saveData();
+    }
+
+    // --- 4. SAVAŞ İHTİMALİ VE MANTIĞI ---
+
+    function resetBattlePoints() {
+        if(confirm("Tüm ülkelerin ve ittifakların savaş puanları sıfırlanacak. Emin misiniz?")) {
+            for(let id in countries) countries[id].battlePoints = 0;
+            for(let id in alliances) alliances[id].battlePoints = 0;
+            saveData();
+            updateUI();
+            logBattle("♻️ Tüm takımların Savaş Puanları (BP) sıfırlandı.", "text-warning");
+        }
+    }
+
+    function getTotalPower(id) {
+        if (!id) return 0;
+        if (id.startsWith('c_')) {
+            if(!countries[id]) return 0;
+            let c = countries[id].stats;
+            return c.kara + c.deniz + c.hava + c.fuze + c.uzay + c.sanal;
+        } else {
+            if(!alliances[id]) return 0;
+            return alliances[id].members.reduce((sum, memberId) => sum + getTotalPower(memberId), 0);
+        }
+    }
+
+    function getDomainStat(id, domain) {
+        if (!id) return 0;
+        if (id.startsWith('c_')) {
+            if(!countries[id]) return 0;
+            return countries[id].stats[domain];
+        } else {
+            if(!alliances[id]) return 0;
+            return alliances[id].members.reduce((sum, memberId) => sum + getDomainStat(memberId, domain), 0);
+        }
+    }
+
+    function getName(id) {
+        return id.startsWith('c_') ? countries[id].name : alliances[id].name;
+    }
+
+    function calculateCombatData(id1, id2, stance1, stance2) {
+        let power1 = getTotalPower(id1);
+        let power2 = getTotalPower(id2);
+        
+        if (power1 === 0) power1 = 0.1;
+        if (power2 === 0) power2 = 0.1;
+
+        // Savunma modunda güç 1.5x çarpılır. Yıpratma ve Saldırı 1x kalır.
+        let effectivePower1 = power1 * (stance1 === 'savunma' ? 1.5 : 1);
+        let effectivePower2 = power2 * (stance2 === 'savunma' ? 1.5 : 1);
+        
+        let totalEffective = effectivePower1 + effectivePower2;
+        let baseP1 = (effectivePower1 / totalEffective) * 100;
+        let baseP2 = (effectivePower2 / totalEffective) * 100;
+
+        let p1Buff = 0;
+        let p2Buff = 0;
+        const domains = ['kara', 'deniz', 'hava', 'fuze', 'uzay', 'sanal'];
+        
+        for (let d of domains) {
+            let v1 = getDomainStat(id1, d);
+            let v2 = getDomainStat(id2, d);
+            
+            if (v1 === 0 && v2 > 0) p2Buff += 4; 
+            else if (v2 === 0 && v1 > 0) p1Buff += 4;
+            else if (v1 > v2) p1Buff += 2; 
+            else if (v2 > v1) p2Buff += 2;
+        }
+
+        let netBuff = p1Buff - p2Buff; 
+        let finalP1 = baseP1 + netBuff;
+        
+        if (finalP1 > 100) finalP1 = 100;
+        if (finalP1 < 0) finalP1 = 0;
+        let finalP2 = 100 - finalP1;
+
+        return { baseP1, baseP2, p1Buff, p2Buff, finalP1, finalP2 };
+    }
+
+    function calculateProbability() {
+        const id1 = document.getElementById('side1-select').value;
+        const id2 = document.getElementById('side2-select').value;
+        const stance1 = document.getElementById('side1-stance').value;
+        const stance2 = document.getElementById('side2-stance').value;
+        const probDisplay = document.getElementById('probability-display');
+
+        if (!id1 || !id2) {
+            probDisplay.innerHTML = "Savaş İhtimali: Lütfen tarafları seçin.";
+            return;
+        }
+        if (id1 === id2) {
+            probDisplay.innerHTML = "Aynı taraf kendiyle savaşamaz!";
+            return;
+        }
+        if (stance1 === 'savunma' && stance2 === 'savunma') {
+            probDisplay.innerHTML = "İki taraf da savunmada. Çatışma yaşanmaz.";
+            return;
+        }
+
+        let combat = calculateCombatData(id1, id2, stance1, stance2);
+
+        probDisplay.innerHTML = `
+            <div style="color:#ffbc42; margin-bottom: 5px;">
+                <strong>${getName(id1)}: %${combat.finalP1.toFixed(1)}</strong> 
+                <br><span class="prob-details">(Temel: %${combat.baseP1.toFixed(1)} | Taktik Buff: +%${combat.p1Buff})</span>
+            </div>
+            <hr style="border-color:#333; margin: 5px 0;">
+            <div style="color:#73d2de;">
+                <strong>${getName(id2)}: %${combat.finalP2.toFixed(1)}</strong> 
+                <br><span class="prob-details">(Temel: %${combat.baseP2.toFixed(1)} | Taktik Buff: +%${combat.p2Buff})</span>
+            </div>
+        `;
+    }
+
+    function logBattle(message, type = '') {
+        const logUl = document.getElementById('battle-log');
+        const li = document.createElement('li');
+        li.innerHTML = message;
+        if(type) li.className = type;
+        logUl.prepend(li);
+    }
+
+    // İstatistik Değiştirme Fonksiyonu (Hasar veya Buff)
+    function applyStatChange(entityId, isIncrease) {
+        let amount = isIncrease ? (parseInt(document.getElementById('stat-gain-amount').value) || 1) 
+                                : (parseInt(document.getElementById('stat-loss-amount').value) || 1);
+        
+        let targetCountryId = null;
+        if (entityId.startsWith('c_')) {
+            targetCountryId = entityId;
+        } else {
+            let members = alliances[entityId].members;
+            if (members.length === 0) return null;
+            
+            // Eğer hasar vereceksek, sadece 0'dan büyük istatistiği olan ülkeleri hedef al
+            let validMembers = members.filter(mId => {
+                let c = countries[mId];
+                return Object.values(c.stats).some(val => val > 0);
+            });
+            
+            if (!isIncrease && validMembers.length === 0) return null;
+            
+            let pool = (!isIncrease || validMembers.length > 0) ? validMembers : members;
+            if(pool.length === 0) return null;
+            targetCountryId = pool[Math.floor(Math.random() * pool.length)];
+        }
+
+        let c = countries[targetCountryId];
+        let validStats = Object.keys(c.stats).filter(k => c.stats[k] > 0);
+        
+        if (validStats.length === 0) {
+            if (isIncrease) validStats = Object.keys(c.stats); // Hepsi 0 ise rastgele birine buff ver
+            else return null; 
+        }
+
+        let randomStat = validStats[Math.floor(Math.random() * validStats.length)];
+        if (isIncrease) {
+            c.stats[randomStat] += amount;
+        } else {
+            c.stats[randomStat] = Math.max(0, c.stats[randomStat] - amount);
+        }
+        
+        return { countryName: c.name, statName: statNames[randomStat], amount: amount };
+    }
+
+    function playTurn() {
+        const id1 = document.getElementById('side1-select').value;
+        const id2 = document.getElementById('side2-select').value;
+        const stance1 = document.getElementById('side1-stance').value;
+        const stance2 = document.getElementById('side2-stance').value;
+
+        if (!id1 || !id2) { alert("Lütfen savaşacak iki tarafı da seçin."); return; }
+        if (id1 === id2) { alert("Bir taraf kendisiyle savaşamaz!"); return; }
+        
+        const name1 = getName(id1);
+        const name2 = getName(id2);
+
+        if (stance1 === 'savunma' && stance2 === 'savunma') {
+            logBattle(`[Tur] 🛡️ ${name1} ve 🛡️ ${name2} birbirlerine karşı savunma pozisyonunda bekledi. Çatışma yaşanmadı.`, 'text-warning');
+            return;
+        }
+
+        let combat = calculateCombatData(id1, id2, stance1, stance2);
+        let roll = Math.random() * 100; 
+        
+        let winnerId, loserId, winnerName, loserName, winnerStance, winChancePercent;
+
+        if (roll <= combat.finalP1) {
+            winnerId = id1; loserId = id2; winnerName = name1; loserName = name2; winnerStance = stance1;
+            winChancePercent = combat.finalP1;
+        } else {
+            winnerId = id2; loserId = id1; winnerName = name2; loserName = name1; winnerStance = stance2;
+            winChancePercent = combat.finalP2;
+        }
+
+        // BP Kazanımı ve Efekt Kontrolü
+        let winnerEntity = winnerId.startsWith('c_') ? countries[winnerId] : alliances[winnerId];
+        if (winnerEntity.battlePoints === undefined) winnerEntity.battlePoints = 0;
+        winnerEntity.battlePoints += 1;
+
+        let thresholdInputId = 'saldiri-threshold'; // Varsayılan olarak saldırıda kalsın
+        if (winnerStance === 'savunma') {
+            thresholdInputId = 'savunma-threshold';
+        } else if (winnerStance === 'yipratma') {
+            thresholdInputId = 'yipratma-threshold';
+        }
+        let threshold = parseInt(document.getElementById(thresholdInputId).value) || 3;
+        
+        let statLog = "";
+        if (winnerEntity.battlePoints >= threshold) {
+            winnerEntity.battlePoints -= threshold; // Puanı harca
+            
+            if (winnerStance === 'saldiri' || winnerStance === 'yipratma') {
+                let res = applyStatChange(loserId, false);
+                if (res) statLog = `<br><span style="color:#ff3366;">💥 <strong>Savaş Puanı Doldu!</strong> ${loserName} tarafındaki ${res.countryName} ülkesinin ${res.statName} seviyesi ${res.amount} azaldı!</span>`;
+            } else if (winnerStance === 'savunma') {
+                let res = applyStatChange(winnerId, true);
+                if (res) statLog = `<br><span style="color:#218380;">✨ <strong>Savaş Puanı Doldu!</strong> ${winnerName} tarafındaki ${res.countryName} ülkesinin ${res.statName} seviyesi ${res.amount} arttı!</span>`;
+            }
+        }
+
+        // Ana Savaş Sonuçları (Toprak & Log)
+        if (winnerStance === 'savunma') {
+            logBattle(`[Tur Başarılı Savunma] 🛡️ ${winnerName} (%${winChancePercent.toFixed(1)} ihtimalle), ⚔️ ${loserName}'nin saldırısını püskürttü ancak sınırlarını korumakla yetinip toprak kazanamadı.${statLog}`, 'text-success');
+        } else if (winnerStance === 'yipratma') {
+            logBattle(`[Tur Yıpratma] ☠️ ${winnerName} (%${winChancePercent.toFixed(1)} ihtimalle), ${loserName} karşısında galip gelerek karşı tarafı yıprattı fakat toprak ele geçirmedi.${statLog}`);
+        } else {
+            let minVal = parseInt(document.getElementById('min-terr').value) || 0;
+            let maxVal = parseInt(document.getElementById('max-terr').value) || 0;
+            if (minVal > maxVal) { let temp = minVal; minVal = maxVal; maxVal = temp; }
+            
+            let territoryGain = Math.floor(Math.random() * (maxVal - minVal + 1)) + minVal;
+            logBattle(`[Tur İşgali] ⚔️ ${winnerName} (%${winChancePercent.toFixed(1)} ihtimalle), ${loserName} karşısında galip geldi ve <strong>${territoryGain}</strong> birim toprak kazandı!${statLog}`);
+            
+            if(winnerId.startsWith('c_')) countries[winnerId].territory += territoryGain;
+            if(loserId.startsWith('c_')) countries[loserId].territory -= territoryGain;
+        }
+
+        if(activeCountryId) openModal(activeCountryId);
+        if(activeAllianceId) openAllianceModal(activeAllianceId);
+        saveData();
+        updateUI(); // BP'lerin ana menüde de güncellenmesi için
+    }
+
+</script>
+</body>
+</html>
