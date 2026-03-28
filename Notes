@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Akıllı Not & Alarm Sistemi</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --bg: #f8fafc;
+            --card: #ffffff;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .container { max-width: 600px; width: 100%; background: var(--card); padding: 20px; border-radius: 15px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: var(--primary); }
+        .input-group { margin-bottom: 15px; }
+        input, textarea, select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        .note-card { background: #fff; border-left: 5px solid var(--primary); padding: 15px; margin-top: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: relative; }
+        .media-preview img { max-width: 100%; border-radius: 8px; margin-top: 10px; }
+        .alarm-indicator { color: #e11d48; font-size: 0.8rem; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📝 Notlarım & Alarmlar</h1>
+    
+    <div class="input-group">
+        <textarea id="noteText" placeholder="Notunuzu buraya yazın..."></textarea>
+    </div>
+    
+    <div class="input-group">
+        <label>Medya Ekle (Resim/Ses):</label>
+        <input type="file" id="noteMedia" accept="image/*,audio/*">
+    </div>
+
+    <div class="input-group">
+        <label>Alarm Zamanı:</label>
+        <input type="datetime-local" id="alarmTime">
+    </div>
+
+    <div class="input-group">
+        <label>Alarm Tipi:</label>
+        <select id="alarmType">
+            <option value="neseli">Neşeli 🎈</option>
+            <option value="sakin">Sakin 🌊</option>
+            <option value="tuhaf">Tuhaf 👽</option>
+            <option value="gurultulu">Gürültülü 🚨</option>
+        </select>
+    </div>
+
+    <div class="input-group">
+        <label>Ses Seviyesi (Desibel):</label>
+        <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5">
+    </div>
+
+    <button onclick="saveNote()">Notu Kaydet</button>
+</div>
+
+<div id="notesList" style="width: 100%; max-width: 600px; margin-top: 20px;"></div>
+
+<script>
+    let notes = JSON.parse(localStorage.getItem('myNotes')) || [];
+
+    function saveNote() {
+        const text = document.getElementById('noteText').value;
+        const time = document.getElementById('alarmTime').value;
+        const type = document.getElementById('alarmType').value;
+        const vol = document.getElementById('volume').value;
+        const mediaFile = document.getElementById('noteMedia').files[0];
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const newNote = {
+                id: Date.now(),
+                text: text,
+                alarmTime: time,
+                alarmType: type,
+                volume: vol,
+                media: e.target ? e.target.result : null,
+                mediaType: mediaFile ? mediaFile.type : null,
+                triggered: false
+            };
+            notes.push(newNote);
+            localStorage.setItem('myNotes', JSON.stringify(notes));
+            renderNotes();
+            resetForm();
+        };
+
+        if (mediaFile) {
+            reader.readAsDataURL(mediaFile);
+        } else {
+            reader.onload({target: null});
+        }
+    }
+
+    function renderNotes() {
+        const list = document.getElementById('notesList');
+        list.innerHTML = '';
+        notes.forEach(note => {
+            const card = document.createElement('div');
+            card.className = 'note-card';
+            card.innerHTML = `
+                <p>${note.text}</p>
+                ${note.alarmTime ? `<span class="alarm-indicator">⏰ ${new Date(note.alarmTime).toLocaleString()} (${note.alarmType})</span>` : ''}
+                <div class="media-preview">
+                    ${note.media && note.mediaType.startsWith('image') ? `<img src="${note.media}">` : ''}
+                    ${note.media && note.mediaType.startsWith('audio') ? `<audio controls src="${note.media}"></audio>` : ''}
+                </div>
+                <button onclick="deleteNote(${note.id})" style="background:#ff4444; font-size:12px; padding:5px; width:auto; margin-top:10px;">Sil</button>
+            `;
+            list.appendChild(card);
+        });
+    }
+
+    function deleteNote(id) {
+        notes = notes.filter(n => n.id !== id);
+        localStorage.setItem('myNotes', JSON.stringify(notes));
+        renderNotes();
+    }
+
+    function resetForm() {
+        document.getElementById('noteText').value = '';
+        document.getElementById('alarmTime').value = '';
+        document.getElementById('noteMedia').value = '';
+    }
+
+    // Alarm Kontrol Döngüsü
+    setInterval(() => {
+        const now = new Date().getTime();
+        notes.forEach(note => {
+            if (note.alarmTime && !note.triggered) {
+                const alarmDate = new Date(note.alarmTime).getTime();
+                if (now >= alarmDate) {
+                    playAlarm(note.alarmType, note.volume);
+                    note.triggered = true;
+                    alert("ALARM: " + note.text);
+                    localStorage.setItem('myNotes', JSON.stringify(notes));
+                }
+            }
+        });
+    }, 1000);
+
+    function playAlarm(type, volume) {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        gain.gain.value = volume;
+
+        // Alarm Tiplerine Göre Ses Dalgaları
+        if(type === 'neseli') osc.type = 'triangle', osc.frequency.setValueAtTime(440, ctx.currentTime);
+        else if(type === 'sakin') osc.type = 'sine', osc.frequency.setValueAtTime(220, ctx.currentTime);
+        else if(type === 'tuhaf') osc.type = 'sawtooth', osc.frequency.setValueAtTime(100, ctx.currentTime);
+        else if(type === 'gurultulu') osc.type = 'square', osc.frequency.setValueAtTime(880, ctx.currentTime);
+
+        osc.start();
+        setTimeout(() => osc.stop(), 3000); // 3 saniye çalar
+    }
+
+    renderNotes();
+</script>
+
+</body>
+</html>
