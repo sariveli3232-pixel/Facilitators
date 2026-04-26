@@ -110,6 +110,10 @@
         .kick-btn { background-color: var(--accent-warning); }
         .kick-btn:hover { background-color: var(--accent-warning-hover); }
         
+        /* Yeni Generaller Butonu Sınıfı */
+        .gen-btn { background-color: var(--highlight); color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 12px; margin-left: 10px; cursor: pointer; transition: background 0.2s; font-weight: bold; width: auto; box-shadow: none; }
+        .gen-btn:hover { background-color: #7c3aed; transform: none; }
+
         .modal { display: none; position: fixed; z-index: 10; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); }
         .modal-content { 
             background-color: var(--bg-panel); 
@@ -200,31 +204,31 @@
         <div class="panel" style="flex: 2; min-width: 100%;">
             <h2>⚔️ Savaş Meydanı</h2>
             
-            <div class="settings-box">
-                <div style="width: 100%; text-align: center; color: var(--accent-warning); margin-bottom: 10px; font-size: 16px;"><strong>Temel Ayarlar</strong></div>
-                <div>
-                    <label>Kazanılacak Min Toprak:</label>
-                    <input type="number" id="min-terr" value="1" min="0">
+            <div id="developer-settings" style="display: none; border: 1px dashed var(--accent-warning); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <h3 style="text-align: center; color: var(--accent-warning); margin-bottom: 15px;">🛠️ Geliştirici Ayarları Paneli</h3>
+                <div class="settings-box">
+                    <div style="width: 100%; text-align: center; color: var(--accent-warning); margin-bottom: 10px; font-size: 16px;"><strong>Temel Ayarlar</strong></div>
+                    <div>
+                        <label>Kazanılacak Min Toprak:</label>
+                        <input type="number" id="min-terr" value="1" min="0">
+                    </div>
+                    <div>
+                        <label>Kazanılacak Max Toprak:</label>
+                        <input type="number" id="max-terr" value="4" min="1">
+                    </div>
                 </div>
-                <div>
-                    <label>Kazanılacak Max Toprak:</label>
-                    <input type="number" id="max-terr" value="4" min="1">
-                </div>
-                <div>
-                    <label>Savunma Bonusu (Çarpan):</label>
-                    <input type="number" id="savunma-bonus-multiplier" value="1.6" min="1" step="0.1">
+
+                <div class="settings-box">
+                    <div style="width: 100%; text-align: center; color: var(--accent-warning); margin-bottom: 10px; font-size: 16px;"><strong>Savaş Puanı (BP) & Mekanik Ayarları</strong></div>
+                    <div><label>Saldırı Tetikleme Puanı:</label><input type="number" id="saldiri-threshold" value="3" min="1"></div>
+                    <div><label>Savunma Tetikleme Puanı:</label><input type="number" id="savunma-threshold" value="5" min="1"></div>
+                    <div><label>Yıpratma Tetikleme Puanı:</label><input type="number" id="yipratma-threshold" value="2" min="1"></div>
+                    <div><label>Kuşatma Tetikleme Puanı:</label><input type="number" id="kusatma-threshold" value="1" min="1"></div>
+                    <div><label>Kazanılan İstatistik (Buff):</label><input type="number" id="stat-gain-amount" value="2" min="1"></div>
+                    <div><label>Kaybedilen İstatistik (Hasar):</label><input type="number" id="stat-loss-amount" value="1" min="1"></div>
+                    <div><label>Kuşatma General Düşüşü (%):</label><input type="number" id="kusatma-debuff-amount" value="3" min="1"></div>
                 </div>
             </div>
-
-            <div class="settings-box">
-                <div style="width: 100%; text-align: center; color: var(--accent-warning); margin-bottom: 10px; font-size: 16px;"><strong>Savaş Puanı (BP) & Mekanik Ayarları</strong></div>
-                <div><label>Saldırı Tetikleme Puanı:</label><input type="number" id="saldiri-threshold" value="3" min="1"></div>
-                <div><label>Savunma Tetikleme Puanı:</label><input type="number" id="savunma-threshold" value="5" min="1"></div>
-                <div><label>Yıpratma Tetikleme Puanı:</label><input type="number" id="yipratma-threshold" value="2" min="1"></div>
-                <div><label>Kazanılan İstatistik (Buff):</label><input type="number" id="stat-gain-amount" value="2" min="1"></div>
-                <div><label>Kaybedilen İstatistik (Hasar):</label><input type="number" id="stat-loss-amount" value="1" min="1"></div>
-            </div>
-
             <div class="container" style="gap:15px; background: var(--bg-main); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color);">
                 <div style="flex: 1;">
                     <h3 style="text-align: center; color: var(--accent-danger);">1. Taraf</h3>
@@ -233,6 +237,7 @@
                         <option value="saldiri">Saldırı Modu ⚔️</option>
                         <option value="savunma">Savunma Modu 🛡️</option>
                         <option value="yipratma">Yıpratma Modu ☠️</option>
+                        <option value="kusatma">Kuşatma Modu 🏰</option>
                     </select>
                 </div>
                 <div style="display:flex; align-items:center; flex-direction:column; justify-content: center; font-size:28px; font-weight:800; flex: 1.5; color: var(--text-muted);">
@@ -248,10 +253,12 @@
                         <option value="saldiri">Saldırı Modu ⚔️</option>
                         <option value="savunma">Savunma Modu 🛡️</option>
                         <option value="yipratma">Yıpratma Modu ☠️</option>
+                        <option value="kusatma">Kuşatma Modu 🏰</option>
                     </select>
                 </div>
             </div>
             <button onclick="playTurn()" style="margin-top: 20px; font-size: 18px; padding: 16px; background-color: var(--accent-danger);">Savaş Turunu Oynat</button>
+            <button id="bp-toggle-btn" onclick="toggleBPMechanics()" style="margin-top: 15px; background-color: var(--accent-success); border: none; color: white; font-weight: bold; padding: 12px; font-size: 14px; box-shadow: none;">BP Mekaniklerini Kapat</button>
             <button onclick="resetBattlePoints()" style="margin-top: 15px; background-color: transparent; border: 1px solid var(--accent-warning); color: var(--accent-warning); font-size: 14px; padding: 12px; box-shadow: none;">Takımların Savaş Puanlarını Sıfırla</button>
             
             <h3 style="margin-top:30px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Savaş Kayıtları</h3>
@@ -267,6 +274,16 @@
             <p style="font-size: 12px; color: var(--text-muted); margin-top: -5px;">(Değerler temel değerlerdir. Savaş sırasında bulunduğunuz çağın numarası ile otomatik çarpılırlar. Bir birim türünün nihai maksimum sınır gücü 9999'dur.)</p>
             <hr style="border-color: var(--border-color); margin: 20px 0;">
             <div id="stats-container"></div>
+        </div>
+    </div>
+
+    <div id="generals-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeGeneralsModal()">&times;</span>
+            <h2 id="gen-modal-title">Generaller</h2>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: -5px;">(İlgili mod seçildiğinde toplam güce yüzde olarak etki eder. -999% ile +999% arası değer girebilirsiniz.)</p>
+            <hr style="border-color: var(--border-color); margin: 20px 0;">
+            <div id="generals-container-new"></div>
         </div>
     </div>
 
@@ -304,6 +321,7 @@
     let activeCountryId = null;
     let activeAllianceId = null;
     let activeTreeCountryId = null; 
+    let bpMechanicsEnabled = true; // YENİ EKLENEN: BP Mekaniği Durumu
 
     const statNames = {
         kara: "Kara",
@@ -316,30 +334,31 @@
 
     const caglar = {
         "1": { id: "1", tier: 1, ad: "Taş Devri", roman: "I", acikBirimler: ["kara"], oncekiler: [], info: "İnsanlığın Şafağı" },
-        "2": { id: "2", tier: 2, ad: "Buz Devri", roman: "II", acikBirimler: ["kara"], oncekiler: ["1"], info: "Zorlu Şartlar" },
-        "3": { id: "3", tier: 3, ad: "Tunç Devri", roman: "III", acikBirimler: ["kara", "deniz"], oncekiler: ["2"], info: "İlk Alaşımlar" },
-        "4": { id: "4", tier: 4, ad: "Demir Devri", roman: "IV", acikBirimler: ["kara", "deniz"], oncekiler: ["3"], info: "Savaşın Evrimi" },
+        "2": { id: "2", tier: 2, ad: "Tunç Devri", roman: "II", acikBirimler: ["kara", "deniz"], oncekiler: ["1"], info: "İlk Alaşımlar" },
+        "3": { id: "3", tier: 3, ad: "Demir Devri", roman: "III", acikBirimler: ["kara", "deniz"], oncekiler: ["2"], info: "Gelişmiş Alaşımlar" },
+        "4": { id: "4", tier: 4, ad: "Klasik Çağ", roman: "IV", acikBirimler: ["kara", "deniz"], oncekiler: ["3"], info: "En Güzel Çağ" },
         
-        "5_klasik": { id: "5_klasik", tier: 5, ad: "Klasik Çağ", roman: "V", acikBirimler: ["kara", "deniz"], oncekiler: ["4"], info: "Standart Yol" },
-        "5_buyu": { id: "5_buyu", tier: 5, ad: "Büyü Devri", roman: "V", acikBirimler: ["kara", "deniz", "buyu"], oncekiler: ["4"], info: "Alternatif Yol" }, 
+        "5_klasik": { id: "5_klasik", tier: 5, ad: "Karanlık Çağ", roman: "V", acikBirimler: ["kara", "deniz"], oncekiler: ["4"], info: "İmparatorlukların Çöküşü" },
+        "5_simya": { id: "5_buyu", tier: 5, ad: "Altın Çağ", roman: "V", acikBirimler: ["kara", "deniz", "buyu"], oncekiler: ["4"], info: "Simyanın Yükselişi" }, 
 
-        "6_karanlik": { id: "6_karanlik", tier: 6, ad: "Karanlık Çağ", roman: "VI", acikBirimler: ["kara", "deniz"], oncekiler: ["5_klasik"], info: "İmparatorlukların Çöküşü" },
-        "6_fantastik": { id: "6_fantastik", tier: 6, ad: "Fantastik Çağ", roman: "VI", acikBirimler: ["kara", "deniz", "buyu", "hava"], oncekiler: ["5_buyu"], info: "Büyünün Devamı" },
+        "6_klasik": { id: "6_kesif", tier: 6, ad: "İmparatorluk Çağı", roman: "VI", acikBirimler: ["kara", "deniz"], oncekiler: ["5_klasik"], info: "Barut ve Pusula Keşfi" },
+        "6_simya": { id: "6_fantastik", tier: 6, ad: "Yükseliş Çağı", roman: "VI", acikBirimler: ["kara", "deniz", "buyu", "hava"], oncekiler: ["5_simya"], info: "Simyanın Zirvesi" },
 
-        "7": { id: "7", tier: 7, ad: "Barut Çağı", roman: "VII", acikBirimler: ["kara", "deniz"], oncekiler: ["6_karanlik"], info: "Ateşli Silahlar" },
-        "8": { id: "8", tier: 8, ad: "Aydınlanma Çağı", roman: "VIII", acikBirimler: ["kara", "deniz"], oncekiler: ["7"], info: "Aklın Uyanışı" },
-        "9": { id: "9", tier: 9, ad: "Endüstri Çağı", roman: "IX", acikBirimler: ["kara", "deniz", "hava"], oncekiler: ["8"], info: "Makineleşme" },
-        "10": { id: "10", tier: 10, ad: "Çatışma Çağı", roman: "X", acikBirimler: ["kara", "deniz", "hava"], oncekiler: ["9"], info: "Büyük Savaşlar" },
-        "11": { id: "11", tier: 11, ad: "Atom Çağı", roman: "XI", acikBirimler: ["kara", "deniz", "hava", "uzay"], oncekiler: ["10"], info: "Nükleer Güç" },
-        "12": { id: "12", tier: 12, ad: "Küresen Çağ", roman: "XII", acikBirimler: ["kara", "deniz", "hava", "uzay"], oncekiler: ["11"], info: "Küreselleşme" },
-        "13": { id: "13", tier: 13, ad: "Yapay Çağ", roman: "XIII", acikBirimler: ["kara", "deniz", "hava", "uzay", "sanal"], oncekiler: ["12"], info: "Ai Yükselişi" }
+        "7": { id: "7", tier: 7, ad: "Barut Çağı", roman: "VII", acikBirimler: ["kara", "deniz"], oncekiler: ["6_klasik"], info: "Barutun Yükselişi" },
+        "8": { id: "8", tier: 8, ad: "Aydınlanma Çağı", roman: "VIII", acikBirimler: ["kara", "deniz"], oncekiler: ["7"], info: "Milliyetçilik" },
+        "9": { id: "9", tier: 9, ad: "Endüstri Çağı", roman: "IX", acikBirimler: ["kara", "deniz", "hava"], oncekiler: ["8"], info: "Sanayi Devrimi" },
+        "10": { id: "10", tier: 10, ad: "Çatışma Çağı", roman: "X", acikBirimler: ["kara", "deniz", "hava"], oncekiler: ["9"], info: "Buna Değer Miydi?" },
+        "11": { id: "11", tier: 11, ad: "Atom Çağı", roman: "XI", acikBirimler: ["kara", "deniz", "hava"], oncekiler: ["10"], info: "..." },
+        "12": { id: "12", tier: 12, ad: "Bilgi Çağı", roman: "XII", acikBirimler: ["kara", "deniz", "hava"], oncekiler: ["11"], info: "İnternetin Başlangıcı" },
+        "13": { id: "13", tier: 13, ad: "Dijital Çağ", roman: "XIII", acikBirimler: ["kara", "deniz", "hava", "sanal"], oncekiler: ["12"], info: "Dron ve Ai Çağı" },
+        "14": { id: "14", tier: 14, ad: "Gelecek Çağ", roman: "XIV", acikBirimler: ["kara", "deniz", "hava", "uzay", "sanal"], oncekiler: ["13"], info: "Bilinmeze Doğru"}
     };
 
     const treeTiers = [
         ["1"], ["2"], ["3"], ["4"],
-        ["5_klasik", "5_buyu"],
-        ["6_karanlik", "6_fantastik"],
-        ["7"], ["8"], ["9"], ["10"], ["11"], ["12"], ["13"]
+        ["5_klasik", "5_simya"],
+        ["6_klasik", "6_simya"],
+        ["7"], ["8"], ["9"], ["10"], ["11"], ["12"], ["13"], ["14"]
     ];
 
     function saveData() {
@@ -365,7 +384,6 @@
         const validDomains = ['kara', 'deniz', 'hava', 'uzay', 'sanal', 'buyu'];
 
         for (let id in countries) {
-            // İsimsiz veya eski versiyondan kalan geçersiz birimleri temizle
             let cleanStats = {};
             for (let d of validDomains) {
                 cleanStats[d] = countries[id].stats[d] || 0;
@@ -375,6 +393,14 @@
             if (countries[id].battlePoints === undefined) countries[id].battlePoints = 0;
             if (countries[id].territory === undefined) countries[id].territory = 100;
             if (countries[id].ageId === undefined || countries[id].ageId === "6_altin" || countries[id].ageId === "14") countries[id].ageId = "1"; 
+            
+            if (!countries[id].generals) {
+                countries[id].generals = { saldiri: 0, savunma: 0, yipratma: 0, kusatma: 0 };
+            }
+            if(countries[id].generals.saldiri === undefined) countries[id].generals.saldiri = 0;
+            if(countries[id].generals.savunma === undefined) countries[id].generals.savunma = 0;
+            if(countries[id].generals.yipratma === undefined) countries[id].generals.yipratma = 0;
+            if(countries[id].generals.kusatma === undefined) countries[id].generals.kusatma = 0;
         }
         for (let id in alliances) {
             if (alliances[id].battlePoints === undefined) alliances[id].battlePoints = 0;
@@ -400,6 +426,7 @@
             name: nameInput,
             flag: flagInput || 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Flag_of_the_United_Nations.svg/320px-Flag_of_the_United_Nations.svg.png',
             stats: { kara: 0, deniz: 0, hava: 0, uzay: 0, sanal: 0, buyu: 0 },
+            generals: { saldiri: 0, savunma: 0, yipratma: 0, kusatma: 0 },
             territory: 100,
             battlePoints: 0,
             ageId: "1" 
@@ -457,12 +484,14 @@
             let c = countries[id];
             let activeAge = caglar[c.ageId || "1"];
             
+            // YENİ EKLENEN: Generaller Butonu
             cList.innerHTML += `
                 <div class="list-item" onclick="openModal('${id}')">
                     <div class="list-item-content">
                         <img src="${c.flag}" class="flag-img" onerror="this.src='https://via.placeholder.com/30x20/4a4e69/fff?text=?'">
                         ${c.name} 
                         <span class="age-badge" onclick="openTechTree('${id}', event)">${activeAge.roman} - ${activeAge.ad}</span>
+                        <button onclick="openGeneralsModal('${id}', event)" class="gen-btn">Generaller</button>
                     </div>
                     <span style="color:var(--text-muted); font-size:14px;">Güç: <span style="color:white;">${getTotalPower(id)}</span> | BP: <span style="color:var(--accent-warning);">${c.battlePoints || 0}</span></span>
                     <button onclick="deleteCountry('${id}', event)" class="delete-btn">Sil</button>
@@ -535,11 +564,46 @@
                 </div>
             `;
         }
+
         document.getElementById('country-modal').style.display = 'block';
     }
 
     function closeModal() {
         document.getElementById('country-modal').style.display = 'none';
+        activeCountryId = null;
+        updateUI();
+    }
+
+    // YENİ EKLENEN: Generaller penceresini açma
+    function openGeneralsModal(id, event) {
+        event.stopPropagation(); // Ülke modalının aynı anda açılmasını engeller
+        activeCountryId = id;
+        const c = countries[id];
+        
+        document.getElementById('gen-modal-title').innerText = c.name + " Generalleri";
+        
+        const genDiv = document.getElementById('generals-container-new');
+        genDiv.innerHTML = '';
+        const genLabels = { saldiri: "Saldırı ⚔️", savunma: "Savunma 🛡️", yipratma: "Yıpratma ☠️", kusatma: "Kuşatma 🏰" };
+        
+        for (let key in c.generals) {
+            genDiv.innerHTML += `
+                <div class="stat-row">
+                    <span style="font-weight: 600;">${genLabels[key]}</span>
+                    <div class="stat-controls">
+                        <input type="number" class="stat-input" style="width: 80px !important;" value="${c.generals[key]}" min="-999" max="999" onchange="setGeneralStat('${key}', this.value)">
+                        <span style="font-weight:bold; margin-left:5px;">%</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        document.getElementById('generals-modal').style.display = 'block';
+    }
+
+    // YENİ EKLENEN: Generaller penceresini kapatma
+    function closeGeneralsModal() {
+        document.getElementById('generals-modal').style.display = 'none';
         activeCountryId = null;
         updateUI();
     }
@@ -572,6 +636,16 @@
         
         c.stats[statKey] = num;
         openModal(activeCountryId);
+        saveData();
+    }
+
+    function setGeneralStat(statKey, val) {
+        let c = countries[activeCountryId];
+        let num = parseInt(val);
+        if (isNaN(num)) num = 0;
+        if (num < -999) num = -999;
+        if (num > 999) num = 999;
+        c.generals[statKey] = num;
         saveData();
     }
 
@@ -712,6 +786,19 @@
         saveData();
     }
 
+    // YENİ EKLENEN: BP Mekaniğini Aç/Kapat Fonksiyonu
+    function toggleBPMechanics() {
+        bpMechanicsEnabled = !bpMechanicsEnabled;
+        const btn = document.getElementById('bp-toggle-btn');
+        if (bpMechanicsEnabled) {
+            btn.innerText = "BP Mekaniklerini Kapat";
+            btn.style.backgroundColor = "var(--accent-success)";
+        } else {
+            btn.innerText = "BP Mekaniklerini Aç";
+            btn.style.backgroundColor = "var(--accent-danger)";
+        }
+    }
+
     function resetBattlePoints() {
         if(confirm("Tüm ülkelerin ve ittifakların savaş puanları sıfırlanacak. Emin misiniz?")) {
             for(let id in countries) countries[id].battlePoints = 0;
@@ -731,7 +818,6 @@
             
             if (!age.acikBirimler.includes(domain)) return 0;
             
-            // Maksimum güç sınırı 9999 olarak uygulandı
             let power = c.stats[domain] * age.tier;
             return Math.min(power, 9999);
         } else {
@@ -754,6 +840,21 @@
         }
     }
 
+    function getGeneralBuff(id, stance) {
+        if (!id) return 0; 
+        if (id.startsWith('c_')) {
+            if (!countries[id] || !countries[id].generals) return 0;
+            return countries[id].generals[stance] || 0;
+        } else {
+            if (!alliances[id] || alliances[id].members.length === 0) return 0;
+            let total = 0;
+            alliances[id].members.forEach(mId => {
+                total += getGeneralBuff(mId, stance);
+            });
+            return total / alliances[id].members.length;
+        }
+    }
+
     function getName(id) {
         return id.startsWith('c_') ? countries[id].name : alliances[id].name;
     }
@@ -765,10 +866,14 @@
         if (power1 === 0) power1 = 0.1;
         if (power2 === 0) power2 = 0.1;
 
-        let defBonus = parseFloat(document.getElementById('savunma-bonus-multiplier').value) || 1.5;
+        let gen1 = getGeneralBuff(id1, stance1);
+        let gen2 = getGeneralBuff(id2, stance2);
+        
+        let mult1 = Math.max(0.01, 1 + (gen1 / 100));
+        let mult2 = Math.max(0.01, 1 + (gen2 / 100));
 
-        let effectivePower1 = power1 * (stance1 === 'savunma' ? defBonus : 1);
-        let effectivePower2 = power2 * (stance2 === 'savunma' ? defBonus : 1);
+        let effectivePower1 = power1 * mult1;
+        let effectivePower2 = power2 * mult2;
         
         let totalEffective = effectivePower1 + effectivePower2;
         let baseP1 = (effectivePower1 / totalEffective) * 100;
@@ -795,7 +900,7 @@
         if (finalP1 < 0) finalP1 = 0;
         let finalP2 = 100 - finalP1;
 
-        return { baseP1, baseP2, p1Buff, p2Buff, finalP1, finalP2 };
+        return { baseP1, baseP2, p1Buff, p2Buff, finalP1, finalP2, gen1, gen2 };
     }
 
     function calculateProbability() {
@@ -813,22 +918,21 @@
             probDisplay.innerHTML = "Aynı taraf kendiyle savaşamaz!";
             return;
         }
-        if (stance1 === 'savunma' && stance2 === 'savunma') {
-            probDisplay.innerHTML = "İki taraf da savunmada. Çatışma yaşanmaz.";
-            return;
-        }
 
         let combat = calculateCombatData(id1, id2, stance1, stance2);
+        
+        let gen1Str = combat.gen1 > 0 ? "+" + combat.gen1.toFixed(1) : combat.gen1.toFixed(1);
+        let gen2Str = combat.gen2 > 0 ? "+" + combat.gen2.toFixed(1) : combat.gen2.toFixed(1);
 
         probDisplay.innerHTML = `
             <div style="color:var(--accent-warning); margin-bottom: 8px;">
                 <strong>${getName(id1)}: %${combat.finalP1.toFixed(1)}</strong> 
-                <span class="prob-details">(Temel: %${combat.baseP1.toFixed(1)} | Taktik Buff: +%${combat.p1Buff})</span>
+                <span class="prob-details">(Temel: %${combat.baseP1.toFixed(1)} | Taktik Buff: +%${combat.p1Buff} | General: %${gen1Str})</span>
             </div>
             <hr style="border-color:var(--border-color); margin: 8px 0;">
             <div style="color:var(--accent-primary);">
                 <strong>${getName(id2)}: %${combat.finalP2.toFixed(1)}</strong> 
-                <span class="prob-details">(Temel: %${combat.baseP2.toFixed(1)} | Taktik Buff: +%${combat.p2Buff})</span>
+                <span class="prob-details">(Temel: %${combat.baseP2.toFixed(1)} | Taktik Buff: +%${combat.p2Buff} | General: %${gen2Str})</span>
             </div>
         `;
     }
@@ -898,11 +1002,6 @@
         const name1 = getName(id1);
         const name2 = getName(id2);
 
-        if (stance1 === 'savunma' && stance2 === 'savunma') {
-            logBattle(`[Tur] 🛡️ ${name1} ve 🛡️ ${name2} birbirlerine karşı savunma pozisyonunda bekledi. Çatışma yaşanmadı.`, 'text-warning');
-            return;
-        }
-
         let combat = calculateCombatData(id1, id2, stance1, stance2);
         let roll = Math.random() * 100; 
         
@@ -918,6 +1017,8 @@
 
         let winnerEntity = winnerId.startsWith('c_') ? countries[winnerId] : alliances[winnerId];
         if (winnerEntity.battlePoints === undefined) winnerEntity.battlePoints = 0;
+        
+        // Her kazanılan tur için +1 BP
         winnerEntity.battlePoints += 1;
 
         let thresholdInputId = 'saldiri-threshold';
@@ -925,19 +1026,39 @@
             thresholdInputId = 'savunma-threshold';
         } else if (winnerStance === 'yipratma') {
             thresholdInputId = 'yipratma-threshold';
+        } else if (winnerStance === 'kusatma') {
+            thresholdInputId = 'kusatma-threshold';
         }
-        let threshold = parseInt(document.getElementById(thresholdInputId).value) || 3;
         
+        let threshold = parseInt(document.getElementById(thresholdInputId).value) || 3;
         let statLog = "";
-        if (winnerEntity.battlePoints >= threshold) {
-            winnerEntity.battlePoints -= threshold;
-            
+        
+        // YENİ EKLENEN: BP Mekaniği açıksa tetiklensin
+        if (bpMechanicsEnabled && winnerEntity.battlePoints >= threshold) {
             if (winnerStance === 'saldiri' || winnerStance === 'yipratma') {
+                winnerEntity.battlePoints -= threshold;
                 let res = applyStatChange(loserId, false);
                 if (res) statLog = `<br><span style="color:var(--accent-danger);">💥 <strong>Savaş Puanı Doldu!</strong> ${loserName} tarafındaki ${res.countryName} ülkesinin ${res.statName} birimi ${res.amount} azaldı!</span>`;
             } else if (winnerStance === 'savunma') {
+                winnerEntity.battlePoints -= threshold;
                 let res = applyStatChange(winnerId, true);
                 if (res) statLog = `<br><span style="color:var(--accent-success);">✨ <strong>Savaş Puanı Doldu!</strong> ${winnerName} tarafındaki ${res.countryName} ülkesinin ${res.statName} birimi ${res.amount} arttı!</span>`;
+            } else if (winnerStance === 'kusatma') {
+                winnerEntity.battlePoints -= threshold;
+                
+                let debuffVal = parseInt(document.getElementById('kusatma-debuff-amount').value) || 3;
+                let genStats = ['saldiri', 'savunma', 'yipratma', 'kusatma'];
+                let targetGenStat = genStats[Math.floor(Math.random() * genStats.length)];
+                let genLabels = { saldiri: "Saldırı", savunma: "Savunma", yipratma: "Yıpratma", kusatma: "Kuşatma" };
+
+                if (loserId.startsWith('c_')) {
+                    countries[loserId].generals[targetGenStat] = Math.max(-999, countries[loserId].generals[targetGenStat] - debuffVal);
+                } else {
+                    alliances[loserId].members.forEach(mId => {
+                        countries[mId].generals[targetGenStat] = Math.max(-999, countries[mId].generals[targetGenStat] - debuffVal);
+                    });
+                }
+                statLog = `<br><span style="color:var(--highlight);">🏰 <strong>Kuşatma Başarılı!</strong> Düşmanın ${genLabels[targetGenStat]} general özelliği %${debuffVal} düştü.</span>`;
             }
         }
 
@@ -945,6 +1066,8 @@
             logBattle(`[Tur Başarılı Savunma] 🛡️ ${winnerName} (%${winChancePercent.toFixed(1)} ihtimalle), ⚔️ ${loserName}'nin saldırısını püskürttü ancak sınırlarını korumakla yetinip toprak kazanamadı.${statLog}`, 'text-success');
         } else if (winnerStance === 'yipratma') {
             logBattle(`[Tur Yıpratma] ☠️ ${winnerName} (%${winChancePercent.toFixed(1)} ihtimalle), ${loserName} karşısında galip gelerek karşı tarafı yıprattı fakat toprak ele geçirmedi.${statLog}`);
+        } else if (winnerStance === 'kusatma') {
+            logBattle(`[Tur Kuşatması] 🏰 ${winnerName} (%${winChancePercent.toFixed(1)} ihtimalle), ${loserName} karşısında kuşatma savaşını kazandı!${statLog}`);
         } else {
             let minVal = parseInt(document.getElementById('min-terr').value) || 0;
             let maxVal = parseInt(document.getElementById('max-terr').value) || 0;
@@ -961,11 +1084,6 @@
         if(activeAllianceId) openAllianceModal(activeAllianceId);
         saveData();
         updateUI();
-    }
-
-</script>
-</body>
-</html>
     }
 
 </script>
